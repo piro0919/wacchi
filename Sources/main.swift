@@ -212,6 +212,7 @@ enum Probe {
             "AdapterDetails.Watts \(status.negotiatedWatts.map(String.init) ?? "nil")",
             "SystemPowerIn (mW)  \(status.powerInMilliwatts.map(String.init) ?? "nil")",
             "soclimit            \(status.chargeLimit.map(String.init) ?? "nil")",
+            "Amperage (mA)       \(status.batteryMilliamps.map(String.init) ?? "nil")",
             "",
             "menu bar            \(menuBar(status))",
             "state               \(status.state)",

@@ -78,6 +78,26 @@ enum SelfTest {
                 ChargeState.classify(connected: true, charging: false, full: true, percent: 99, limit: nil)
                     == .full,
                 "FullyCharged が立っていれば満充電")
+            check(
+                ChargeState.classify(
+                    connected: true, charging: false, full: false, percent: 60, limit: 80, batteryMilliamps: -1500)
+                    == .supplementing,
+                "つながっていてバッテリーから電流が出ていれば、充電器だけでは足りない")
+            check(
+                ChargeState.classify(
+                    connected: true, charging: true, full: false, percent: 60, limit: 80, batteryMilliamps: -1500)
+                    == .supplementing,
+                "充電中の印が立っていても、放電していれば足りない方を出す")
+            check(
+                ChargeState.classify(
+                    connected: true, charging: false, full: false, percent: 80, limit: 80, batteryMilliamps: -50)
+                    == .heldAtLimit(80),
+                "わずかな放電は揺れとみなし、足りないとは言わない")
+            check(
+                ChargeState.classify(
+                    connected: false, charging: false, full: false, percent: 60, limit: 80, batteryMilliamps: -1500)
+                    == .onBattery,
+                "抜いていればバッテリー駆動。放電していて当然なので足りないとは言わない")
         }
 
         // 充電の上限の読み取り。NSKeyedArchiver の形を plist で組んで渡す

@@ -14,6 +14,8 @@ import IOKit.ps
 enum ChargeState: Equatable {
     /// 充電中
     case charging
+    /// 電源につながっているが、充電器の電力が足りずバッテリーからも使っている
+    case supplementing
     /// 本体の充電上限に達して止まっている。値は上限の %
     case heldAtLimit(Int)
     /// 満充電
@@ -26,6 +28,7 @@ enum ChargeState: Equatable {
     var label: String {
         switch self {
         case .charging: return L.charging
+        case .supplementing: return L.supplementing
         case .heldAtLimit(let limit): return L.heldAtLimit(limit)
         case .full: return L.full
         case .notCharging: return L.notCharging
@@ -34,10 +37,12 @@ enum ChargeState: Equatable {
     }
 
     /// 生の値から状態を決める。画面にも IOKit にも触らない純粋な計算
-    static func classify(connected: Bool, charging: Bool, full: Bool, percent: Int?, limit: Int?)
-        -> ChargeState
-    {
+    static func classify(
+        connected: Bool, charging: Bool, full: Bool, percent: Int?, limit: Int?, batteryMilliamps: Int? = nil
+    ) -> ChargeState {
         guard connected else { return .onBattery }
+        // つながっているのにバッテリーから電流が出ている。充電器の電力を使い切っている
+        if let batteryMilliamps, batteryMilliamps < Self.supplementingThreshold { return .supplementing }
         if charging { return .charging }
         if full || (percent ?? 0) >= 100 { return .full }
         // 上限で止まっている間も、残量は上限のすぐ下まで揺れる。本体は上限から数 % 落ちるまで
@@ -50,6 +55,9 @@ enum ChargeState: Equatable {
 
     /// 上限で止まっているとみなす幅
     static let limitSlack = 5
+
+    /// バッテリーで補っているとみなす放電電流（mA）。計測の揺れで一瞬だけ負に振れる分は拾わない
+    static let supplementingThreshold = -100
 }
 
 /// ある瞬間の電源の様子
@@ -67,11 +75,13 @@ struct PowerStatus {
     var powerInMilliwatts: Int?
     /// 本体の充電上限（%）。設定していなければ nil
     var chargeLimit: Int?
+    /// バッテリーに流れる電流（mA）。充電で正、放電で負
+    var batteryMilliamps: Int?
 
     var state: ChargeState {
         ChargeState.classify(
             connected: isConnected, charging: isCharging, full: isFullyCharged,
-            percent: batteryPercent, limit: chargeLimit)
+            percent: batteryPercent, limit: chargeLimit, batteryMilliamps: batteryMilliamps)
     }
 }
 
@@ -117,6 +127,9 @@ enum PowerProbe {
         status.isCharging = property("IsCharging", of: service) as? Bool ?? false
         status.isFullyCharged = property("FullyCharged", of: service) as? Bool ?? false
         status.batteryPercent = property("CurrentCapacity", of: service) as? Int
+        // 放電中は負の値。ioreg は符号無しで表示するので 18446744073709550000 のような巨大な数に見えるが、
+        // 中身は符号付きの 64 ビット。符号付きとして読み直す
+        status.batteryMilliamps = (property("Amperage", of: service) as? NSNumber).map { Int($0.int64Value) }
         status.powerInMilliwatts = powerIn(of: service)
 
         // 抜いた直後にも AdapterDetails が残っていることがある。つながっているときだけ使う

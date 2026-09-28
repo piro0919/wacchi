@@ -36,6 +36,7 @@ enum L {
 
     // 充電の状態
     static var charging: String { t("充電中", "Charging") }
+    static var supplementing: String { t("充電器だけでは足りず、バッテリーも使用中", "Charger can't keep up, using battery too") }
     static func heldAtLimit(_ limit: Int) -> String {
         t("上限 \(limit)% で停止中", "Held at the \(limit)% limit")
     }
