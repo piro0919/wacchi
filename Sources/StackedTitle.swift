@@ -11,15 +11,15 @@ enum StackedTitle {
     /// メニューバーの厚み。これが上限
     private static let height: CGFloat = 22
 
-    private static let topFont = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .semibold)
-    private static let bottomFont = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .regular)
+    /// 上下で同じ書体にする。大きさか太さが違うと、同じ桁数でも幅が揃わず上下がずれて見える
+    private static let font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
 
     static func image(top: String, bottom: String) -> NSImage {
         let topText = NSAttributedString(
-            string: top, attributes: [.font: topFont, .foregroundColor: NSColor.black])
+            string: top, attributes: [.font: font, .foregroundColor: NSColor.black])
         let bottomText = NSAttributedString(
             string: bottom,
-            attributes: [.font: bottomFont, .foregroundColor: NSColor.black.withAlphaComponent(0.6)])
+            attributes: [.font: font, .foregroundColor: NSColor.black.withAlphaComponent(0.55)])
 
         let topSize = topText.size()
         let bottomSize = bottomText.size()
@@ -27,8 +27,10 @@ enum StackedTitle {
 
         let image = NSImage(size: NSSize(width: width, height: height), flipped: false) { _ in
             // 右に揃える。桁が変わったときに、数字の末尾（W）の位置が動かない
-            bottomText.draw(at: NSPoint(x: width - bottomSize.width, y: 1))
-            topText.draw(at: NSPoint(x: width - topSize.width, y: height - topSize.height))
+            // 行の箱には字の上下に余白があるので、箱を枠から 1pt ずつはみ出させて段の間を空ける。
+            // 数字には下に伸びる部分が無く、はみ出しても字は欠けない
+            bottomText.draw(at: NSPoint(x: width - bottomSize.width, y: -1))
+            topText.draw(at: NSPoint(x: width - topSize.width, y: height - topSize.height + 1))
             return true
         }
         image.isTemplate = true
