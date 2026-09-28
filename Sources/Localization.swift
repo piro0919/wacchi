@@ -50,6 +50,7 @@ enum L {
     static var charger: String { t("充電器", "Charger") }
     static var negotiated: String { t("最大", "Max") }
     static var powerIn: String { t("今の電力", "Drawing") }
+    static var fromBattery: String { t("（バッテリーから）", " (from battery)") }
     static var settings: String { t("設定…", "Settings…") }
     static var quit: String { t("終了", "Quit") }
 

@@ -77,6 +77,13 @@ struct PowerStatus {
     var chargeLimit: Int?
     /// バッテリーに流れる電流（mA）。充電で正、放電で負
     var batteryMilliamps: Int?
+    /// バッテリーの電圧（mV）
+    var batteryMillivolts: Int?
+
+    /// バッテリーから出ている電力（mW）。放電していなければ nil
+    var batteryDrawMilliwatts: Int? {
+        PowerFormat.dischargeMilliwatts(milliamps: batteryMilliamps, millivolts: batteryMillivolts)
+    }
 
     var state: ChargeState {
         ChargeState.classify(
@@ -87,17 +94,38 @@ struct PowerStatus {
 
 /// 表示用の文字列の組み立て。画面にも IOKit にも触らない
 enum PowerFormat {
-    /// メニューバーの2段。上が今の値、下が上限。例: 11W と 94W。
-    /// 充電器が無いときは nil を返し、呼ぶ側は1段で 0W と出す
-    static func menuBar(powerInMilliwatts: Int?, negotiatedWatts: Int?, connected: Bool)
-        -> (now: String, max: String)?
-    {
-        guard connected, let negotiatedWatts, negotiatedWatts > 0 else { return nil }
-        return ("\(wholeWatts(powerInMilliwatts ?? 0))W", "\(negotiatedWatts)W")
+    /// メニューバーの2段。
+    /// - 充電器があるとき: 上が充電器から引いている電力、下が上限。例: 11W と 94W
+    /// - 充電器が無いとき: 上がバッテリーから出ている電力、下は BAT。例: 8W と BAT
+    /// - 抜いた直後でまだ放電の値が無いとき: 上が --、下は BAT
+    /// バッテリーが無ければ nil を返し、呼ぶ側は1段で 0W と出す（Mac mini など）
+    static func menuBar(
+        powerInMilliwatts: Int?, negotiatedWatts: Int?, connected: Bool, batteryDrawMilliwatts: Int? = nil,
+        batteryPresent: Bool = false
+    ) -> (top: String, bottom: String)? {
+        if connected {
+            guard let negotiatedWatts, negotiatedWatts > 0 else { return nil }
+            return ("\(wholeWatts(powerInMilliwatts ?? 0))W", "\(negotiatedWatts)W")
+        }
+        guard let batteryDrawMilliwatts else { return batteryPresent ? (pendingLabel, batteryLabel) : nil }
+        return ("\(wholeWatts(batteryDrawMilliwatts))W", batteryLabel)
     }
 
-    /// 充電器が無いときの1段の表示
+    /// 抜いた直後の上の段。macOS は放電電流を1分ほど更新しないので、その間は値が無い。
+    /// 0W と出すと「何も使っていない」と読めてしまうため、まだ分からないことを示す
+    static let pendingLabel = "--"
+
+    /// 充電器が無いときの下の段。英語の略だが日本語の表示でも通じる
+    static let batteryLabel = "BAT"
+
+    /// どちらの値も読めないときの1段の表示
     static let disconnected = "0W"
+
+    /// 放電中の電力（mW）。電圧 × 放電電流。放電していない（電流が 0 以上）なら nil
+    static func dischargeMilliwatts(milliamps: Int?, millivolts: Int?) -> Int? {
+        guard let milliamps, let millivolts, milliamps < 0, millivolts > 0 else { return nil }
+        return -milliamps * millivolts / 1000
+    }
 
     /// mW を四捨五入した W にする。負の値は 0 に丸める（計測の揺れで一瞬だけ負になることがある）
     static func wholeWatts(_ milliwatts: Int) -> Int {
@@ -129,7 +157,8 @@ enum PowerProbe {
         status.batteryPercent = property("CurrentCapacity", of: service) as? Int
         // 放電中は負の値。ioreg は符号無しで表示するので 18446744073709550000 のような巨大な数に見えるが、
         // 中身は符号付きの 64 ビット。符号付きとして読み直す
-        status.batteryMilliamps = (property("Amperage", of: service) as? NSNumber).map { Int($0.int64Value) }
+        status.batteryMilliamps = amperage(of: service)
+        status.batteryMillivolts = property("Voltage", of: service) as? Int
         status.powerInMilliwatts = powerIn(of: service)
 
         // 抜いた直後にも AdapterDetails が残っていることがある。つながっているときだけ使う
@@ -146,6 +175,20 @@ enum PowerProbe {
         guard service != 0 else { return nil }
         defer { IOObjectRelease(service) }
         return powerIn(of: service)
+    }
+
+    /// バッテリーの電流と電圧だけ読む。抜いている間、2秒ごとに呼ぶ
+    static func battery() -> (milliamps: Int?, millivolts: Int?) {
+        let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleSmartBattery"))
+        guard service != 0 else { return (nil, nil) }
+        defer { IOObjectRelease(service) }
+        return (amperage(of: service), property("Voltage", of: service) as? Int)
+    }
+
+    /// 放電中は負の値。ioreg は符号無しで表示するので 18446744073709550000 のような巨大な数に見えるが、
+    /// 中身は符号付きの 64 ビット。符号付きとして読み直す
+    private static func amperage(of service: io_service_t) -> Int? {
+        (property("Amperage", of: service) as? NSNumber).map { Int($0.int64Value) }
     }
 
     private static func powerIn(of service: io_service_t) -> Int? {

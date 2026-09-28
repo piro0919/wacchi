@@ -13,24 +13,46 @@ enum SelfTest {
         // メニューバーの2段
         do {
             let lines = PowerFormat.menuBar(powerInMilliwatts: 11800, negotiatedWatts: 94, connected: true)
-            check(lines?.now == "12W" && lines?.max == "94W", "上に今の値を四捨五入して、下に上限")
+            check(lines?.top == "12W" && lines?.bottom == "94W", "上に今の値を四捨五入して、下に上限")
             check(
-                PowerFormat.menuBar(powerInMilliwatts: 11400, negotiatedWatts: 94, connected: true)?.now
+                PowerFormat.menuBar(powerInMilliwatts: 11400, negotiatedWatts: 94, connected: true)?.top
                     == "11W",
                 "0.5 未満は切り捨てる")
             check(
-                PowerFormat.menuBar(powerInMilliwatts: nil, negotiatedWatts: 94, connected: true)?.now
+                PowerFormat.menuBar(powerInMilliwatts: nil, negotiatedWatts: 94, connected: true)?.top
                     == "0W",
                 "今の値が読めなければ 0W として出す")
-            check(
-                PowerFormat.menuBar(powerInMilliwatts: 11800, negotiatedWatts: 94, connected: false) == nil,
-                "抜いていれば2段にしない")
             check(
                 PowerFormat.menuBar(powerInMilliwatts: 11800, negotiatedWatts: nil, connected: true) == nil,
                 "上限が読めなければ2段にしない")
             check(
                 PowerFormat.menuBar(powerInMilliwatts: 11800, negotiatedWatts: 0, connected: true) == nil,
                 "上限が 0 なら2段にしない")
+
+            // 充電器が無いとき
+            let onBattery = PowerFormat.menuBar(
+                powerInMilliwatts: nil, negotiatedWatts: nil, connected: false, batteryDrawMilliwatts: 8300)
+            check(onBattery?.top == "8W" && onBattery?.bottom == "BAT", "抜いていれば、上にバッテリーからの電力、下に BAT")
+            check(
+                PowerFormat.menuBar(powerInMilliwatts: 11800, negotiatedWatts: 94, connected: false) == nil,
+                "抜いていてバッテリーの値も無ければ2段にしない（バッテリーの無い Mac）")
+            let pending = PowerFormat.menuBar(
+                powerInMilliwatts: nil, negotiatedWatts: nil, connected: false, batteryPresent: true)
+            check(pending?.top == "--" && pending?.bottom == "BAT", "抜いた直後で放電の値がまだ無ければ -- と BAT")
+            check(
+                PowerFormat.menuBar(
+                    powerInMilliwatts: 11800, negotiatedWatts: 94, connected: true, batteryDrawMilliwatts: 8300)?.bottom
+                    == "94W",
+                "つながっていれば、放電していても充電器の2段を出す")
+        }
+
+        // 放電中の電力
+        do {
+            check(PowerFormat.dischargeMilliwatts(milliamps: -1000, millivolts: 12000) == 12000, "電圧 × 放電電流")
+            check(PowerFormat.dischargeMilliwatts(milliamps: 0, millivolts: 12000) == nil, "電流が 0 なら放電していない")
+            check(PowerFormat.dischargeMilliwatts(milliamps: 500, millivolts: 12000) == nil, "充電中は放電していない")
+            check(PowerFormat.dischargeMilliwatts(milliamps: -1000, millivolts: nil) == nil, "電圧が読めなければ出さない")
+            check(PowerFormat.dischargeMilliwatts(milliamps: nil, millivolts: 12000) == nil, "電流が読めなければ出さない")
         }
 
         // W への丸め

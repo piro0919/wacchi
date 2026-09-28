@@ -149,23 +149,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func refreshPower() {
-        // 抜いている間は読まない。0W と出すだけなので読む意味が無い
-        guard status.isConnected else { return }
-        status.powerInMilliwatts = PowerProbe.powerInMilliwatts()
+        if status.isConnected {
+            status.powerInMilliwatts = PowerProbe.powerInMilliwatts()
+        } else {
+            // 抜いている間はバッテリーから出ている電力を出す。電流と電圧の2つだけ読む
+            let battery = PowerProbe.battery()
+            status.batteryMilliamps = battery.milliamps
+            status.batteryMillivolts = battery.millivolts
+        }
         render()
     }
 
     private func render() {
         let lines = PowerFormat.menuBar(
             powerInMilliwatts: status.powerInMilliwatts, negotiatedWatts: status.negotiatedWatts,
-            connected: status.isConnected)
+            connected: status.isConnected, batteryDrawMilliwatts: status.batteryDrawMilliwatts,
+            batteryPresent: status.batteryMillivolts != nil)
         // 同じものを入れ直すだけでもメニューバーは描き直される。変わったときだけ入れる
-        let key = lines.map { "\($0.now)\n\($0.max)" } ?? PowerFormat.disconnected
+        let key = lines.map { "\($0.top)\n\($0.bottom)" } ?? PowerFormat.disconnected
         if key != shownTitle {
             shownTitle = key
             if let lines {
                 statusItem.button?.title = ""
-                statusItem.button?.image = StackedTitle.image(top: lines.now, bottom: lines.max)
+                statusItem.button?.image = StackedTitle.image(top: lines.top, bottom: lines.bottom)
             } else {
                 statusItem.button?.image = nil
                 statusItem.button?.title = PowerFormat.disconnected
@@ -177,7 +183,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         setInfo(.battery, "\(L.battery): \(status.batteryPercent.map { "\($0)%" } ?? "-")")
         setInfo(.charger, "\(L.charger): \(status.chargerName ?? "-")")
         setInfo(.negotiated, "\(L.negotiated): \(status.negotiatedWatts.map { "\($0)W" } ?? "-")")
-        let powerIn = status.isConnected ? status.powerInMilliwatts.map(PowerFormat.detailWatts) : nil
+        let powerIn: String? =
+            status.isConnected
+            ? status.powerInMilliwatts.map(PowerFormat.detailWatts)
+            : status.batteryDrawMilliwatts.map { PowerFormat.detailWatts($0) + L.fromBattery }
         setInfo(.powerIn, "\(L.powerIn): \(powerIn ?? "-")")
     }
 
@@ -213,6 +222,7 @@ enum Probe {
             "SystemPowerIn (mW)  \(status.powerInMilliwatts.map(String.init) ?? "nil")",
             "soclimit            \(status.chargeLimit.map(String.init) ?? "nil")",
             "Amperage (mA)       \(status.batteryMilliamps.map(String.init) ?? "nil")",
+            "Voltage (mV)        \(status.batteryMillivolts.map(String.init) ?? "nil")",
             "",
             "menu bar            \(menuBar(status))",
             "state               \(status.state)",
@@ -224,8 +234,9 @@ enum Probe {
         guard
             let lines = PowerFormat.menuBar(
                 powerInMilliwatts: status.powerInMilliwatts, negotiatedWatts: status.negotiatedWatts,
-                connected: status.isConnected)
+                connected: status.isConnected, batteryDrawMilliwatts: status.batteryDrawMilliwatts,
+                batteryPresent: status.batteryMillivolts != nil)
         else { return PowerFormat.disconnected }
-        return "\(lines.now) (top) / \(lines.max) (bottom)"
+        return "\(lines.top) (top) / \(lines.bottom) (bottom)"
     }
 }
