@@ -2,13 +2,15 @@
 
 /* 色はアプリのアイコンから引く。地の空色、髪の黄色、太い輪郭線の焦げ茶 */
 @theme {
-  --color-sky: #a3dcfd;
-  --color-sky-deep: #5fb4ec;
+  --color-cream: #fff8e6;
+  --color-cream-deep: #fbe9b8;
+  --color-ink: #241010;
   --color-yellow: #fde356;
   --color-yellow-deep: #f2c21b;
-  --color-ink: #241010;
-  --color-cream: #fffbea;
-  --color-line: #f3e3a6;
+  --color-yellow-soft: #fff1a8;
+  /* アイコンの地の空色。ページ側でも拾ってアクセントにする */
+  --color-sky: #a3dcfd;
+  --color-sky-deep: #4aa8e8;
 }
 
 html {
@@ -30,21 +32,31 @@ body {
   letter-spacing: 0.02em;
 }
 
+/* 見出しの下に引くマーカー。太さと位置は文字に対して固定 */
+.marker {
+  background-image: linear-gradient(transparent 60%, var(--color-yellow-soft) 60%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  padding-inline: 0.15em;
+}
+
+/* 背景に敷く水玉。うるさくならないよう薄く、広めの間隔で */
+.dots {
+  background-image: radial-gradient(var(--color-cream-deep) 2px, transparent 2px);
+  background-size: 22px 22px;
+}
+
+/* ぼかした色の塊。区画の隅に置いて単色を崩す */
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 /* アイコンと同じ太い輪郭のシール。枠と、下にずらした影を同じ焦げ茶で描く */
 .sticker {
   border: 3px solid var(--color-ink);
   box-shadow: 0 6px 0 0 var(--color-ink);
-}
-
-/* 見出しの地。アイコンの地色そのものにして、絵の四角い縁を溶かす */
-.sky {
-  background: var(--color-sky);
-}
-
-/* 区画の境目の稲妻。アホ毛と同じ形の小さな印を並べる */
-.bolts {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath d='M27 6 15 27h9l-3 15 12-21h-9z' fill='%23fde356' stroke='%23241010' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: repeat-x;
-  background-size: 48px 48px;
-  height: 48px;
 }
