@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Wacchi — see how many watts your charger is giving your Mac",
-    "description": "A tiny Mac menu bar app that stacks the power your Mac is drawing from its charger above the most that charger can give it. Free and open source."
+    "title": "Wacchi — a free WattsConnected alternative for the Mac menu bar",
+    "description": "Like WattsConnected, Wacchi keeps in the menu bar how many watts your Mac is drawing from its charger, stacked above the most that charger can give it. Free and open source."
   },
   "hero": {
     "tagline": "How many watts from your charger?",
