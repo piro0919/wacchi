@@ -1,0 +1,5 @@
+build/
+Wacchi.app/
+dist/
+.DS_Store
+Vendor/
