@@ -84,6 +84,7 @@ Konechi にそろえる。ログイン時の起動、言語（日本語 / 英語
 ### 配り方
 
 無料・MIT。GitHub Releases に DMG を置き、Sparkle で更新を届け、Homebrew Cask でも入れられるようにする。
+Cask は `piro0919/homebrew-tap` の `Casks/wacchi.rb`。リリースのたびに version と sha256 を直す。
 Sparkle の署名鍵は Konechi・Nonja・Okigae・Gocci と同じものを使う。
 
 ### キャラクター
@@ -99,4 +100,3 @@ Sparkle の署名鍵は Konechi・Nonja・Okigae・Gocci と同じものを使�
 - 充電器が無いときの表示（今は `0W`）
 - `ChargerData.NotChargingReason` の値の意味。分かれば「充電していない」の理由を出せる
 - LP（`wacchi.kkweb.io`）
-- Homebrew Cask の登録

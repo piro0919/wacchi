@@ -15,6 +15,15 @@ Wacchi reads the same registry entry `ioreg -rn AppleSmartBattery` prints:
 It keeps no history and draws no charts. Only the current reading is read, every
 two seconds, and nothing is written to disk.
 
+## Install
+
+```bash
+brew install --cask piro0919/tap/wacchi
+```
+
+Or download the DMG from [Releases](https://github.com/piro0919/wacchi/releases/latest).
+Apple Silicon, macOS 14 or later.
+
 ## Build
 
 Xcode is not required — the Swift that ships with the Command Line Tools is
