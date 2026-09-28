@@ -100,4 +100,3 @@ Sparkle の署名鍵は Konechi・Nonja・Okigae・Gocci と同じものを使�
 
 - 充電器が無いときの表示（今は `0W`）
 - `ChargerData.NotChargingReason` の値の意味。分かれば「充電していない」の理由を出せる
-- LP（`wacchi.kkweb.io`）

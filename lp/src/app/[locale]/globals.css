@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/* 色はアプリのアイコンから引く。地の空色、髪の黄色、太い輪郭線の焦げ茶 */
+@theme {
+  --color-sky: #a3dcfd;
+  --color-sky-deep: #5fb4ec;
+  --color-yellow: #fde356;
+  --color-yellow-deep: #f2c21b;
+  --color-ink: #241010;
+  --color-cream: #fffbea;
+  --color-line: #f3e3a6;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+
+  /* 日本語を語のまとまりで折り返す。これが無いと見出しが「を、」や
+     「キ／ーボード」で割れる。対応していないブラウザでは従来どおり */
+  word-break: auto-phrase;
+}
+
+/* 見出しの書体。丸く弾む字で、キャラクターの絵柄に寄せる */
+.display {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  letter-spacing: 0.02em;
+}
+
+/* アイコンと同じ太い輪郭のシール。枠と、下にずらした影を同じ焦げ茶で描く */
+.sticker {
+  border: 3px solid var(--color-ink);
+  box-shadow: 0 6px 0 0 var(--color-ink);
+}
+
+/* 見出しの地。アイコンの地色そのものにして、絵の四角い縁を溶かす */
+.sky {
+  background: var(--color-sky);
+}
+
+/* 区画の境目の稲妻。アホ毛と同じ形の小さな印を並べる */
+.bolts {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath d='M27 6 15 27h9l-3 15 12-21h-9z' fill='%23fde356' stroke='%23241010' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-size: 48px 48px;
+  height: 48px;
+}

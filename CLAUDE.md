@@ -35,6 +35,8 @@ open Wacchi.app
 - `Vendor/` is not tracked. If it disappears, `build.sh` fetches it again
 - The version is passed in through `WACCHI_VERSION`. Local builds stay at `0.0.0`
 - A new source file must also be added to the file list in `build.sh`
+- The landing page is a pnpm workspace under `lp/`, modelled on Hawky's. Use `pnpm lp:dev` and
+  `pnpm lp:build`. CI runs its lint, typecheck and build on Linux
 
 ## Gather what you can before asking
 

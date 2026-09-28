@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "title": "Wacchi — see how many watts your charger is giving your Mac",
+    "description": "A tiny Mac menu bar app that stacks the power your Mac is drawing from its charger above the most that charger can give it. Free and open source."
+  },
+  "hero": {
+    "tagline": "How many watts from your charger?",
+    "lead": "The power your Mac is drawing from its charger right now, and the most that charger can give it. Wacchi keeps both in the menu bar, one above the other.",
+    "download": "Download — free",
+    "requirement": "macOS 14 or later, Apple silicon"
+  },
+  "reading": {
+    "title": "Now on top, max below",
+    "top": {
+      "label": "The top number",
+      "body": "What is coming into your Mac from the charger right now. Read again every two seconds."
+    },
+    "bottom": {
+      "label": "The bottom number",
+      "body": "The most your Mac and this charger agreed on. It changes when you plug in a different charger."
+    }
+  },
+  "features": {
+    "title": "What it does",
+    "not_zero": {
+      "title": "Doesn't drop to 0W at your charge limit",
+      "body": "Stop charging at 80% and your Mac keeps drawing power from the charger all the same. Wacchi shows what comes in from the charger to the whole Mac, not what goes into the battery."
+    },
+    "charger": {
+      "title": "Tells you if the charger is holding back",
+      "body": "Open the menu to see the charger's name next to the most it is actually giving. A 96W charger stuck at 60W points at the cable or the port."
+    },
+    "no_history": {
+      "title": "Records nothing",
+      "body": "It only looks at the current reading. No history, no charts, and nothing written to disk."
+    },
+    "quiet": {
+      "title": "Just leave it there",
+      "body": "No Dock icon and no account. The only choices are whether it starts at login and which rows the menu shows."
+    }
+  },
+  "install": {
+    "title": "Setting it up",
+    "steps": [
+      {
+        "title": "Install",
+        "body": "Download the DMG and drag Wacchi into Applications, or use Homebrew."
+      },
+      {
+        "title": "Let it open",
+        "body": "The author is not a registered Apple developer, so the first launch is blocked. Open System Settings → Privacy & Security and click Open Anyway. After that it opens normally."
+      }
+    ],
+    "note": "Macs without a battery, such as the Mac mini, have nothing to read and show 0W.",
+    "cta": "Download — free"
+  },
+  "footer": {
+    "source": "Source",
+    "releases": "Past updates",
+    "privacy": "Privacy"
+  },
+  "language": {
+    "ja": "日本語",
+    "en": "English"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "updated": "Last updated: September 29, 2026",
+    "intro": "Wacchi reads the current state of your charger and battery and puts two numbers in the menu bar. That's the whole app. It has no server, no analytics, and no account.",
+    "sections": [
+      {
+        "title": "What it reads",
+        "body": "The power information macOS already keeps: the charger's name and maximum wattage, the power coming in from it, the battery level and whether it is charging, and the charge limit set in System Settings. macOS makes all of this available to ordinary apps, so Wacchi asks for no special permission."
+      },
+      {
+        "title": "Nothing leaves the Mac",
+        "body": "The readings are used to draw the numbers in the menu bar and nothing else. Nothing is stored, collected, or uploaded, and no history is kept. There is nowhere for it to be uploaded to."
+      },
+      {
+        "title": "Update checks go to GitHub",
+        "body": "Wacchi checks for a new version once when it starts, not on a timer. The check fetches a small file from its GitHub Releases page, so GitHub sees the request the way it sees any download, including your IP address. It carries nothing about your power."
+      },
+      {
+        "title": "No analytics, ever",
+        "body": "There is no crash reporting, no usage tracking, no unique identifier, and no third-party SDK of any kind in the app."
+      },
+      {
+        "title": "You can check all of this",
+        "body": "Wacchi is open source under the MIT license, so none of the above has to be taken on trust. Read the source, or open an issue if something looks wrong."
+      },
+      {
+        "title": "Changes",
+        "body": "If a future version starts doing something new with your data, this page gets updated before that version ships."
+      }
+    ],
+    "back": "Back to Wacchi"
+  }
+}

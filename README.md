@@ -67,6 +67,17 @@ The app itself takes flags for inspecting what it reads.
 ./Wacchi.app/Contents/MacOS/Wacchi --settings   # open with the settings window
 ```
 
+## Landing page
+
+`lp/` holds the site published at <https://wacchi.kkweb.io> — Next.js with
+next-intl, Japanese and English. It lives in this repository so a release and
+the wording that describes it land in the same commit.
+
+```bash
+pnpm install
+pnpm lp:dev
+```
+
 ## Design decisions
 
 See [SPEC.md](./SPEC.md), which also records the approaches that were dropped,
