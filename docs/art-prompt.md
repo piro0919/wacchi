@@ -44,3 +44,19 @@ letters, no numbers, no logos, no background scenery, no drop shadows.
   `sips -g hasAlpha` で `no` を確かめる。入っていたら背景色で塗りつぶした RGB に直す
   （Konechi の `Tools/make-icon.py` と同じ考え方）
 - 16px と 32px に縮めて、髪の黄色とアホ毛の稲妻が残っているかを見る
+
+## LP の挿絵（`lp/public/art-*.png`）
+
+アイコンを作ったのと同じチャットの続きで頼む。別のチャットで頼むと顔と髪がずれる。
+共通の条件は 1536×1024、背景は本当の透明、文字なし。1枚目の指示で人物の固定を書き、2枚目以降は
+「same girl, same style, same canvas rules」で済ませた。
+
+| ファイル | 場面 |
+| --- | --- |
+| `art-hero.png` | 手を振り、もう片方の手で USB-C のプラグを持つ。プラグの周りに小さな火花 |
+| `art-not-zero.png` | 80% の電池を抱えてくつろぐ。電池につながったケーブルに火花が流れ続けている |
+| `art-charger.png` | 虫眼鏡で充電器を覗き込む。レンズ越しの片目が大きい |
+| `art-no-history.png` | 真っ白なメモ帳を掲げる。耳に鉛筆 |
+| `art-quiet.png` | 小さな全身で、黄色い細い帯（メニューバー）に腰かけて手を振る。Konechi の同じ場面と対 |
+
+受け取ったら `./Tools/compress.sh` で色数を落とす。1枚1MB超が 200〜350KB になる。
