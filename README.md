@@ -1,7 +1,8 @@
 # Wacchi
 
 A tiny macOS menu bar app that shows how much power your Mac is drawing from
-its charger, next to the most the charger can give it — `11 / 94W`.
+its charger, stacked above the most the charger can give it — `11W` on top,
+`94W` underneath. With no charger connected it shows a single `0W`.
 
 Wacchi reads the same registry entry `ioreg -rn AppleSmartBattery` prints:
 

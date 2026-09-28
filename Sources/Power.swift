@@ -77,12 +77,17 @@ struct PowerStatus {
 
 /// 表示用の文字列の組み立て。画面にも IOKit にも触らない
 enum PowerFormat {
-    /// メニューバーの文字。「今の値 / 上限」。例: 11 / 94W
-    static func menuBar(powerInMilliwatts: Int?, negotiatedWatts: Int?, connected: Bool) -> String {
-        guard connected, let negotiatedWatts, negotiatedWatts > 0 else { return "0W" }
-        let now = wholeWatts(powerInMilliwatts ?? 0)
-        return "\(now) / \(negotiatedWatts)W"
+    /// メニューバーの2段。上が今の値、下が上限。例: 11W と 94W。
+    /// 充電器が無いときは nil を返し、呼ぶ側は1段で 0W と出す
+    static func menuBar(powerInMilliwatts: Int?, negotiatedWatts: Int?, connected: Bool)
+        -> (now: String, max: String)?
+    {
+        guard connected, let negotiatedWatts, negotiatedWatts > 0 else { return nil }
+        return ("\(wholeWatts(powerInMilliwatts ?? 0))W", "\(negotiatedWatts)W")
     }
+
+    /// 充電器が無いときの1段の表示
+    static let disconnected = "0W"
 
     /// mW を四捨五入した W にする。負の値は 0 に丸める（計測の揺れで一瞬だけ負になることがある）
     static func wholeWatts(_ milliwatts: Int) -> Int {

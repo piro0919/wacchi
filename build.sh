@@ -40,7 +40,7 @@ swiftc \
   -framework Sparkle \
   -Xlinker -rpath -Xlinker @executable_path/../Frameworks \
   -o "$APP/Contents/MacOS/Wacchi" \
-  Sources/Localization.swift Sources/Power.swift \
+  Sources/Localization.swift Sources/Power.swift Sources/StackedTitle.swift \
   Sources/Settings.swift Sources/SelfTest.swift Sources/Updater.swift \
   Sources/SettingsWindow.swift Sources/main.swift
 

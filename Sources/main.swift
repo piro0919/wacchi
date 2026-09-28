@@ -38,6 +38,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// 全部を読み直す保険。抜き挿しの通知を取りこぼしたとき用
     private var statusTimer: Timer?
     private var powerSource: CFRunLoopSource?
+    /// いまメニューバーに出している中身。同じなら描き直さない
+    private var shownTitle: String?
 
     private var settingsWindow = SettingsWindowController()
     /// 画面を作り直すかの判断に使う。文字列は組み立て時に焼き込まれるため
@@ -51,7 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem.menu = menu
-        // 数字の幅を揃える。揃えないと値が変わるたびに横幅が揺れ、隣の項目まで動く
+        // 充電器が無いときの 0W だけは文字で出す。2段の絵と同じく数字の幅を揃えておく
         statusItem.button?.font = .monospacedDigitSystemFont(
             ofSize: NSFont.menuBarFont(ofSize: 0).pointSize, weight: .regular)
 
@@ -154,12 +156,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func render() {
-        let title = PowerFormat.menuBar(
+        let lines = PowerFormat.menuBar(
             powerInMilliwatts: status.powerInMilliwatts, negotiatedWatts: status.negotiatedWatts,
             connected: status.isConnected)
-        // 同じ文字を入れ直すだけでもメニューバーは描き直される。変わったときだけ入れる
-        if statusItem.button?.title != title {
-            statusItem.button?.title = title
+        // 同じものを入れ直すだけでもメニューバーは描き直される。変わったときだけ入れる
+        let key = lines.map { "\($0.now)\n\($0.max)" } ?? PowerFormat.disconnected
+        if key != shownTitle {
+            shownTitle = key
+            if let lines {
+                statusItem.button?.title = ""
+                statusItem.button?.image = StackedTitle.image(top: lines.now, bottom: lines.max)
+            } else {
+                statusItem.button?.image = nil
+                statusItem.button?.title = PowerFormat.disconnected
+            }
         }
         statusItem.button?.toolTip = status.state.label
 
@@ -203,9 +213,18 @@ enum Probe {
             "SystemPowerIn (mW)  \(status.powerInMilliwatts.map(String.init) ?? "nil")",
             "soclimit            \(status.chargeLimit.map(String.init) ?? "nil")",
             "",
-            "menu bar            \(PowerFormat.menuBar(powerInMilliwatts: status.powerInMilliwatts, negotiatedWatts: status.negotiatedWatts, connected: status.isConnected))",
+            "menu bar            \(menuBar(status))",
             "state               \(status.state)",
         ]
         Swift.print(lines.joined(separator: "\n"))
+    }
+
+    private static func menuBar(_ status: PowerStatus) -> String {
+        guard
+            let lines = PowerFormat.menuBar(
+                powerInMilliwatts: status.powerInMilliwatts, negotiatedWatts: status.negotiatedWatts,
+                connected: status.isConnected)
+        else { return PowerFormat.disconnected }
+        return "\(lines.now) (top) / \(lines.max) (bottom)"
     }
 }

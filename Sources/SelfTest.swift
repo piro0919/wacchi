@@ -10,32 +10,27 @@ enum SelfTest {
     static func run() -> Int32 {
         failures = 0
 
-        // メニューバーの文字
+        // メニューバーの2段
         do {
+            let lines = PowerFormat.menuBar(powerInMilliwatts: 11800, negotiatedWatts: 94, connected: true)
+            check(lines?.now == "12W" && lines?.max == "94W", "上に今の値を四捨五入して、下に上限")
             check(
-                PowerFormat.menuBar(powerInMilliwatts: 11800, negotiatedWatts: 94, connected: true)
-                    == "12 / 94W",
-                "今の値は四捨五入して上限と並べる")
-            check(
-                PowerFormat.menuBar(powerInMilliwatts: 11400, negotiatedWatts: 94, connected: true)
-                    == "11 / 94W",
+                PowerFormat.menuBar(powerInMilliwatts: 11400, negotiatedWatts: 94, connected: true)?.now
+                    == "11W",
                 "0.5 未満は切り捨てる")
             check(
-                PowerFormat.menuBar(powerInMilliwatts: nil, negotiatedWatts: 94, connected: true)
-                    == "0 / 94W",
-                "今の値が読めなければ 0 として出す")
-            check(
-                PowerFormat.menuBar(powerInMilliwatts: 11800, negotiatedWatts: 94, connected: false)
+                PowerFormat.menuBar(powerInMilliwatts: nil, negotiatedWatts: 94, connected: true)?.now
                     == "0W",
-                "抜いていれば 0W だけ")
+                "今の値が読めなければ 0W として出す")
             check(
-                PowerFormat.menuBar(powerInMilliwatts: 11800, negotiatedWatts: nil, connected: true)
-                    == "0W",
-                "上限が読めなければ 0W だけ")
+                PowerFormat.menuBar(powerInMilliwatts: 11800, negotiatedWatts: 94, connected: false) == nil,
+                "抜いていれば2段にしない")
             check(
-                PowerFormat.menuBar(powerInMilliwatts: 11800, negotiatedWatts: 0, connected: true)
-                    == "0W",
-                "上限が 0 なら 0W だけ")
+                PowerFormat.menuBar(powerInMilliwatts: 11800, negotiatedWatts: nil, connected: true) == nil,
+                "上限が読めなければ2段にしない")
+            check(
+                PowerFormat.menuBar(powerInMilliwatts: 11800, negotiatedWatts: 0, connected: true) == nil,
+                "上限が 0 なら2段にしない")
         }
 
         // W への丸め
