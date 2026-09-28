@@ -28,13 +28,13 @@ open Wacchi.app
 
 ## What the menu shows
 
-| Row      | Contents                                                                 |
-| -------- | ------------------------------------------------------------------------ |
-| Status   | Charging / Held at the charge limit / Fully charged / Not charging / On battery |
-| Battery  | The charge level                                                         |
-| Charger  | The adapter's name (e.g. 96W USB-C Power Adapter)                        |
-| Max      | The negotiated wattage                                                   |
-| Drawing  | The power coming in from the charger, to one decimal place               |
+| Row     | Contents                                                                        |
+| ------- | ------------------------------------------------------------------------------- |
+| Status  | Charging / Held at the charge limit / Fully charged / Not charging / On battery |
+| Battery | The charge level                                                                |
+| Charger | The adapter's name (e.g. 96W USB-C Power Adapter)                               |
+| Max     | The negotiated wattage                                                          |
+| Drawing | The power coming in from the charger, to one decimal place                      |
 
 The charge limit is read from macOS's own setting in System Settings → Battery.
 Comparing the rating in the charger's name with the negotiated wattage tells you
