@@ -19,8 +19,57 @@ APP="Wacchi.app"
 DMG="Wacchi-${VERSION}.dmg"
 ZIP="Wacchi-${VERSION}.zip"
 
+# 作る前に確かめる。どれか一つでも外れたら、何も作らずに止める
+fail() {
+  echo "エラー: $*" >&2
+  exit 1
+}
+
+if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  fail "版数は 1.2.3 の形で渡してください（受け取った値: ${VERSION}）"
+fi
+
+# 作業ツリーが汚れていると、配る中身がどのコミットにも残らない
+if [ -n "$(git status --porcelain)" ]; then
+  git status --short >&2
+  fail "作業ツリーに未コミットの変更があります。コミットするか退避してから上げてください"
+fi
+
+# 札はこのコミットに付ける。GitHub に無いコミットには付けられないので、先に push しておく
+HEAD_SHA="$(git rev-parse HEAD)"
+git fetch -q origin main
+if ! git merge-base --is-ancestor "$HEAD_SHA" origin/main; then
+  fail "手元の HEAD（${HEAD_SHA:0:7}）が origin/main に入っていません。push してから上げてください"
+fi
+if git rev-parse -q --verify "refs/tags/v${VERSION}" >/dev/null ||
+  git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}" >/dev/null; then
+  fail "札 v${VERSION} はすでにあります。版数を上げてください"
+fi
+
+# リリースノートは CHANGELOG.md のこの版の節から取る。節が無い・空なら止める。
+# --generate-notes は main へ直に積んだコミットを拾わず、「Full Changelog」の一行だけになる
+NOTES_FILE="$(mktemp)"
+trap 'rm -f "$NOTES_FILE"' EXIT
+awk -v head="## [${VERSION}]" '
+  /^## / { if (found) exit; if (index($0, head) == 1) { found = 1; next } }
+  found { print }
+' CHANGELOG.md >"$NOTES_FILE"
+if ! grep -q '[^[:space:]]' "$NOTES_FILE"; then
+  fail "CHANGELOG.md に「## [${VERSION}]」の節がありません（あっても中身が空です）"
+fi
+
 # 版数を Info.plist に焼き込むため、build.sh へ渡す
 WACCHI_VERSION="$VERSION" ./build.sh
+
+# 焼き込まれた版数が引数と食い違っていたら、札と中身がずれる
+BUILT_VERSION="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$APP/Contents/Info.plist")"
+if [ "$BUILT_VERSION" != "$VERSION" ]; then
+  fail "できたアプリの版数が ${BUILT_VERSION} です（期待値: ${VERSION}）"
+fi
+codesign --verify --deep --strict "$APP" || fail "できたアプリの署名が壊れています"
+
+# 配る前に、できたものの --selftest を通す
+./"$APP"/Contents/MacOS/Wacchi --selftest
 
 rm -rf dist
 # 更新用の zip は別の場所に置く。generate_appcast は同じ版数の書庫が2つあると
@@ -52,7 +101,8 @@ echo "GitHub Releases に上げます…"
 gh release create "v${VERSION}" \
   --repo "$REPO" \
   --title "v${VERSION}" \
-  --generate-notes \
+  --target "$HEAD_SHA" \
+  --notes-file "$NOTES_FILE" \
   "dist/${DMG}" "dist/update/${ZIP}" "dist/update/appcast.xml"
 
 echo "完了: https://github.com/${REPO}/releases/tag/v${VERSION}"
