@@ -169,20 +169,14 @@ enum PowerProbe {
         return status
     }
 
-    /// 今の値だけ読む。2秒ごとに呼ぶので、要る鍵ひとつに絞る
-    static func powerInMilliwatts() -> Int? {
+    /// 今の値だけ読む。2秒ごとに呼ぶので、充電器からの電力とバッテリーの電流・電圧の3つに絞る。
+    /// 電流はつながっている間も読む。充電器が足りずバッテリーで補い始めたかはこれでしか分からず、
+    /// 電源の通知がその変わり目で来るとは限らない
+    static func live() -> (powerInMilliwatts: Int?, milliamps: Int?, millivolts: Int?) {
         let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleSmartBattery"))
-        guard service != 0 else { return nil }
+        guard service != 0 else { return (nil, nil, nil) }
         defer { IOObjectRelease(service) }
-        return powerIn(of: service)
-    }
-
-    /// バッテリーの電流と電圧だけ読む。抜いている間、2秒ごとに呼ぶ
-    static func battery() -> (milliamps: Int?, millivolts: Int?) {
-        let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleSmartBattery"))
-        guard service != 0 else { return (nil, nil) }
-        defer { IOObjectRelease(service) }
-        return (amperage(of: service), property("Voltage", of: service) as? Int)
+        return (powerIn(of: service), amperage(of: service), property("Voltage", of: service) as? Int)
     }
 
     /// 放電中は負の値。ioreg は符号無しで表示するので 18446744073709550000 のような巨大な数に見えるが、

@@ -35,8 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var status = PowerStatus()
     /// 今の値だけを読む。2秒ごと
     private var powerTimer: Timer?
-    /// 全部を読み直す保険。抜き挿しの通知を取りこぼしたとき用
-    private var statusTimer: Timer?
+    /// 電源の通知を受ける口。手放すと通知が止まるので持ち続ける
     private var powerSource: CFRunLoopSource?
     /// いまメニューバーに出している中身。同じなら描き直さない
     private var shownTitle: String?
@@ -59,12 +58,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         refreshAll()
 
-        // 電源の抜き挿し。C の呼び戻しなので何も捕まえられない。通知に載せ替えて受ける
+        // 電源の抜き挿し。C の呼び戻しなので何も捕まえられない。通知に載せ替えて受ける。
+        // 状態・残量・充電器・上限の読み直しはこれとメニューを開いたときだけで足りる。
+        // - 電源の情報が変われば通知が来る。抜き挿し、充電の開始と停止、残量、充電器の差し替えはここに入る
+        // - 何も変わらなくても60秒ごとに来る（2026-10-01 に notifyutil で実測）。取りこぼしても1分で戻る
+        // - 上限は plist で、変えても通知は来ない。ただ上限を変えれば充電が始まるか止まるので、
+        //   そこで通知が来る。上限だけ変わって何も起きない間に古くなるのはツールチップの文言だけ
+        // - 補っている状態は電流で決まり、通知は来ないことがある。電流は2秒ごとの読み取りで拾う
+        // 以前はこのほかに10秒ごとに全部を読み直していたが、拾えるものが残っていないので外した
         powerSource = IOPSNotificationCreateRunLoopSource(
             { _ in NotificationCenter.default.post(name: .powerSourceChanged, object: nil) }, nil)?
             .takeRetainedValue()
         if let powerSource {
-            CFRunLoopAddSource(CFRunLoopGetMain(), powerSource, .defaultMode)
+            // メニューを開いている間も抜き挿しを拾えるよう、タイマーと同じく .common に載せる
+            CFRunLoopAddSource(CFRunLoopGetMain(), powerSource, .commonModes)
         }
         NotificationCenter.default.addObserver(
             forName: .powerSourceChanged, object: nil, queue: .main
@@ -95,13 +102,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             // Timer は主の実行ループから呼ぶ。飛ばずに入り、違ったら落とす
             MainActor.assumeIsolated { self?.refreshPower() }
         }
-        statusTimer = Timer(timeInterval: 10, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.refreshAll() }
-        }
-        for timer in [powerTimer, statusTimer].compactMap({ $0 }) {
+        if let powerTimer {
             // 起こす時刻に幅を持たせ、OS がほかの仕事とまとめて起こせるようにする
-            timer.tolerance = 0.5
-            RunLoop.main.add(timer, forMode: .common)
+            powerTimer.tolerance = 0.5
+            RunLoop.main.add(powerTimer, forMode: .common)
         }
 
         // 更新の確認は起動時に1回だけ。見つかったときだけ画面が出る
@@ -149,14 +153,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func refreshPower() {
-        if status.isConnected {
-            status.powerInMilliwatts = PowerProbe.powerInMilliwatts()
-        } else {
-            // 抜いている間はバッテリーから出ている電力を出す。電流と電圧の2つだけ読む
-            let battery = PowerProbe.battery()
-            status.batteryMilliamps = battery.milliamps
-            status.batteryMillivolts = battery.millivolts
-        }
+        // つながっている間は充電器からの電力、抜いている間はバッテリーから出ている電力を出す。
+        // 電流はどちらでも読む。補っている状態の判定に使う
+        let live = PowerProbe.live()
+        status.powerInMilliwatts = live.powerInMilliwatts
+        status.batteryMilliamps = live.milliamps
+        status.batteryMillivolts = live.millivolts
         render()
     }
 
