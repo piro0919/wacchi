@@ -257,6 +257,12 @@ export default async function Page({ params }: PageProps) {
         <Link className="font-bold opacity-60 hover:opacity-100" href="/privacy">
           {t("footer.privacy")}
         </Link>
+        <a
+          className="font-bold opacity-60 hover:opacity-100"
+          href="https://buymeacoffee.com/piro0919"
+        >
+          Buy Me a Coffee
+        </a>
       </footer>
     </>
   );
